@@ -334,16 +334,7 @@ impl BladeRenderer {
         config: BladeSurfaceConfig,
     ) -> anyhow::Result<Self> {
         // workaround for https://github.com/zed-industries/zed/issues/26143
-        let sample_count = std::env::var("ZED_SAMPLE_COUNT")
-            .ok()
-            .or_else(|| std::env::var("ZED_PATH_SAMPLE_COUNT").ok())
-            .and_then(|v| v.parse().ok())
-            .or_else(|| {
-                [4, 2, 1]
-                    .into_iter()
-                    .find(|count| context.gpu.supports_texture_sample_count(*count))
-            })
-            .unwrap_or(1);
+        let sample_count = 1; // No antialiasing
 
         let surface_config = gpu::SurfaceConfig {
             size: config.size,
