@@ -1,0 +1,47 @@
+name: Build Zed on Linux (Fork)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build_linux:
+    name: Build Zed for Linux
+    runs-on: buildjet-16vcpu-ubuntu-2204
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libx11-dev libasound2-dev libfontconfig1-dev libfreetype6-dev libdbus-1-dev libatk1.0-dev libgdk-pixbuf2.0-dev libgtk-3-dev libxcb-randr0-dev libxcb-xtest0-dev libpango1.0-dev libudev-dev libssl-dev libclang-dev clang llvm lldb
+
+      - name: Configure CI (optional, but good practice)
+        run: |
+          mkdir -p ~/.cargo
+          cp ./.cargo/ci-config.toml ~/.cargo/config.toml || echo "ci-config.toml not found, skipping."
+
+      - name: Build Zed
+        run: cargo build --release -p zed
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zed-linux-build-${{ github.sha }}
+          path: target/release/zed
+
+      - name: Check for existence of Zed binary
+        run: |
+          if [ -f target/release/zed ]; then
+            echo "Zed binary found at target/release/zed"
+          else
+            echo "Zed binary NOT found after build!"
+            exit 1
+          fi
